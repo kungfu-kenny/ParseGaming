@@ -17,7 +17,7 @@ class ParseMetaCritic(Spider):
         Output: set with the link of the image and its scope
         """
         link_class = response.css('a.metascore_anchor')
-        link = f"https://metacritic.com{link_class.attrib.get('href')}"
+        link = f"https://www.metacritic.com{link_class.attrib.get('href')}"
         score = link_class.css('div.metascore_w::text').get().strip()
         if score:
             return link, int(score)
@@ -32,7 +32,7 @@ class ParseMetaCritic(Spider):
         """
         res = response.css('a.title')
         return res.css('h3::text').get().strip(), \
-            f"https://metacritic.com{res.attrib.get('href')}"
+            f"https://www.metacritic.com{res.attrib.get('href')}"
 
     @staticmethod
     def parse_platform(response:object) -> set:

@@ -24,7 +24,8 @@ class ParseMetaCriticDirectly(Spider):
             return []
         with open(self.file, 'r') as json_used:
             value_list = json.load(json_used)
-        urls = [f.get('link', '') for f in value_list if f] 
+        urls = [f.get('link', '') for f in value_list if f]
+        urls = urls[:25]
         for url in urls:
             yield Request(url=url, callback=self.parse)
 
@@ -92,8 +93,6 @@ class ParseMetaCriticDirectly(Spider):
         """
         Method which is dedicated to get values from it
         """
-        time.sleep(0.2)
-        #TODO add here link response
         title = response.css('a.hover_none')
         href = f"https://www.metacritic.com{title.attrib.get('href')}"
         title = title.css('h1::text').get()
@@ -112,11 +111,13 @@ class ParseMetaCriticDirectly(Spider):
         reviews, reviews_link = self.get_reviews(response)
         user_status, user_count, user_link = self.get_users(response)
         developers_name, developers_link = self.get_developers(response)
+        time.sleep(0.2)
         yield {
             'title': title,
+            'response': response.request.url,
             'company': company,
             'released': released,
-            'rating': rating.css('span.data::text').get().strip() if rating.css('span.data::text').get() else '',
+            'rating': rating.css('span.data::text').get().strip() if rating.css('span.data::text').get() else rating.css('span.data::text').get(),
             'platform': platform,
             'platform_link': platform_link,
             'reviews': int(reviews),
@@ -127,7 +128,8 @@ class ParseMetaCriticDirectly(Spider):
             'score': int(score.css('span::text').get()) if score.css('span::text').get() else 0,
             'user_score': int(float(response.css('div.metascore_w.user::text').get())*10) \
                 if response.css('div.metascore_w.user::text').get() else 0,
-            'status_press': response.css('span.desc::text').get(),
+            'status_press': response.css('span.desc::text').get().strip() \
+                if response.css('span.desc::text') else response.css('span.desc::text').get(),
             'status_user': user_status,
             'developers': developers_name,
             'href': href,
