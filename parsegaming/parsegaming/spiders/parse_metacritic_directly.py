@@ -12,7 +12,7 @@ class ParseMetaCriticDirectly(Spider):
 
     def __init__(self):
         self.file = \
-            '/home/oshevchenko/FolderProjects/ParseGaming/parsegaming/metacritic_alltime_best.json'
+            ''
 
     def start_requests(self) -> list:
         """
@@ -21,12 +21,13 @@ class ParseMetaCriticDirectly(Spider):
         Output: we developed list of the selected 
         """
         if not os.path.exists(self.file):
-            return []
+            return
         with open(self.file, 'r') as json_used:
             value_list = json.load(json_used)
         urls = [f.get('link', '') for f in value_list if f]
-        urls = urls[:25]
+        # urls = urls[:25]
         for url in urls:
+            time.sleep(0.3)
             yield Request(url=url, callback=self.parse)
 
     @staticmethod
@@ -42,8 +43,9 @@ class ParseMetaCriticDirectly(Spider):
             return platform, ''
         platform = response.css('span.platform')
         platform = platform.css('a')
-        return platform.css('::text').get().strip() if platform.css('::text').get() else '', \
-            f"https://www.metacritic.com{platform.attrib.get('href')}"
+        pl = platform.attrib.get('href')
+        link = f"https://www.metacritic.com{pl}" if pl else ''
+        return platform.css('::text').get().strip() if platform.css('::text').get() else '', link
 
     @staticmethod
     def get_reviews(response:object) -> set:
@@ -53,7 +55,8 @@ class ParseMetaCriticDirectly(Spider):
         """
         reviews = response.css('span.count')
         reviews = reviews.css('a')
-        reviews_link = f"https://www.metacritic.com{reviews.attrib.get('href')}"
+        rev = reviews.attrib.get('href')
+        reviews_link = f"https://www.metacritic.com{rev}" if rev else ''
         reviews_number = reviews.css('span::text').get()#.strip()
         return reviews_number if reviews_number else 0, reviews_link
 
@@ -71,7 +74,8 @@ class ParseMetaCriticDirectly(Spider):
         user_counts = userscore.css('span.count')
         user_count = user_counts.css('a::text').get()#.strip()
         user_count = user_count.strip() if user_count else ''
-        user_link = f"https://www.metacritic.com{user_counts.css('a').attrib.get('href')}"
+        li = user_counts.css('a').attrib.get('href')
+        user_link = f"https://www.metacritic.com{li}" if li else ''
         user_count = 0 if not user_count or not 'Ratings' in user_count else user_count.split('Ratings')[0].strip()
         return user_desc, user_count, user_link
 
@@ -84,7 +88,8 @@ class ParseMetaCriticDirectly(Spider):
         developers = response.css('li.summary_detail.developer')
         developers = developers.css('span.data')
         developers = developers.css('a.button')
-        link = f"https://www.metacritic.com{developers.attrib.get('href')}"
+        li = developers.attrib.get('href')
+        link = f"https://www.metacritic.com{li}" if li else ''
         name = developers.css('::text').get()#.strip()
         name = name.strip() if name else ''
         return name, link
@@ -94,11 +99,13 @@ class ParseMetaCriticDirectly(Spider):
         Method which is dedicated to get values from it
         """
         title = response.css('a.hover_none')
-        href = f"https://www.metacritic.com{title.attrib.get('href')}"
+        title_href = title.attrib.get('href')
+        href = f"https://www.metacritic.com{title_href}" if title_href else ''
         title = title.css('h1::text').get()
         title = title.strip() if title else ''
         company = response.css('span.data')
-        company_href = f"https://www.metacritic.com{company.css('a').attrib.get('href')}"
+        co = company.css('a').attrib.get('href')
+        company_href = f"https://www.metacritic.com{co}" if co else ''
         company = company.css('a::text').get()
         company = company.strip() if company else ''
         released = response.css('li.summary_detail.release_data')
@@ -106,18 +113,19 @@ class ParseMetaCriticDirectly(Spider):
         released = released.strip() if released else ''
         score = response.css('div.metascore_w')
         rating = response.css('li.summary_detail.product_rating')
+        rating = rating.css('span.data::text')
         genre = response.css('li.summary_detail.product_genre')
         platform, platform_link = self.get_platform(response)
         reviews, reviews_link = self.get_reviews(response)
         user_status, user_count, user_link = self.get_users(response)
         developers_name, developers_link = self.get_developers(response)
-        time.sleep(0.2)
+        # time.sleep(0.2)
         yield {
             'title': title,
             'response': response.request.url,
             'company': company,
             'released': released,
-            'rating': rating.css('span.data::text').get().strip() if rating.css('span.data::text').get() else rating.css('span.data::text').get(),
+            'rating': rating.get().strip() if rating else '',
             'platform': platform,
             'platform_link': platform_link,
             'reviews': int(reviews),
@@ -129,7 +137,7 @@ class ParseMetaCriticDirectly(Spider):
             'user_score': int(float(response.css('div.metascore_w.user::text').get())*10) \
                 if response.css('div.metascore_w.user::text').get() else 0,
             'status_press': response.css('span.desc::text').get().strip() \
-                if response.css('span.desc::text') else response.css('span.desc::text').get(),
+                if response.css('span.desc::text') else '',
             'status_user': user_status,
             'developers': developers_name,
             'href': href,
