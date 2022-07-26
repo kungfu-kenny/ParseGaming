@@ -1,4 +1,7 @@
 venv
 __pycache__
+tst.json
+metacritic_games.json
+opencritic_games.json
 metacritic_alltime_best.json
 opencritic_alltime_best.json
