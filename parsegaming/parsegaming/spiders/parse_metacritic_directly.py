@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from fake_useragent import UserAgent
 from scrapy import Spider, Request
 
 
@@ -25,10 +26,13 @@ class ParseMetaCriticDirectly(Spider):
         with open(self.file, 'r') as json_used:
             value_list = json.load(json_used)
         urls = [f.get('link', '') for f in value_list if f]
-        # urls = urls[:25]
         for url in urls:
             time.sleep(0.3)
-            yield Request(url=url, callback=self.parse)
+            yield Request(
+                url=url,
+                headers={'User-Agent': str(UserAgent())},
+                callback=self.parse
+            )
 
     @staticmethod
     def get_platform(response:object) -> set:
@@ -119,7 +123,6 @@ class ParseMetaCriticDirectly(Spider):
         reviews, reviews_link = self.get_reviews(response)
         user_status, user_count, user_link = self.get_users(response)
         developers_name, developers_link = self.get_developers(response)
-        # time.sleep(0.2)
         yield {
             'title': title,
             'response': response.request.url,

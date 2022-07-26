@@ -80,4 +80,5 @@ class ParseMetaCritic(Spider):
         if next_link:
             next_link = f"https://www.metacritic.com{next_link}"
             time.sleep(0.2)
+            # time.sleep(5.0)
             yield response.follow(next_link, callback=self.parse)
