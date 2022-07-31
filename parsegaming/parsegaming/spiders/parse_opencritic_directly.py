@@ -2,6 +2,7 @@ import os
 import json
 import time
 from scrapy import Request, Spider
+from items import GameDirectlyOpencriticItem
 
 
 class ParseOpenCriticDirectly(Spider):
@@ -30,20 +31,11 @@ class ParseOpenCriticDirectly(Spider):
             time.sleep(0.3)
             yield Request(url=url, callback=self.parse)
 
-    def parse(self, response) -> dict:
-        img = response.css('div.header-image-container')
-        img = img.css('picture')
-        img = img.css('img').attrib.get('src')
-        img = img if img else ''
+    def parse(self, response):
+        item = GameDirectlyOpencriticItem()
+        img = response.css('div.header-image-container > picture > img').attrib.get('src')
+        companies = [f.strip() for f in response.css('div.companies > span::text').getall()]
 
-        name = response.css('h1.mb-0::text').get().strip()
-        companies = response.css('div.companies')
-        companies = [f.strip() for f in companies.css('span::text').getall()]
-        companies = [f[:-1].strip() if f[-1] == ',' else f for f in companies]
-        platforms = response.css('div.platforms')
-        platforms = platforms.css('span')
-        platforms = platforms.css('strong::text').getall()
-        
         values = response.css('div.inner-orb::text').getall()
         if len(values) == 2:
             score, recommend = [
@@ -58,25 +50,25 @@ class ParseOpenCriticDirectly(Spider):
         else:
             score, recommend = -1, -1
 
-        released = response.css('div.platforms::text').get().replace('-', '').strip()
-        date, year = released.split(', ')
-        link = response.css('div.text-right.my-1')
-        link = link.css('a')
-        critics_number = link.css('::text')
+        release = response.css('div.platforms::text').get().replace('-', '').strip()
+        date, year = release.split(', ')
+        link = response.css('div.text-right.my-1 > a')
+        
+        critics_number = response.css('div.text-right.my-1 > a::text')
         critics_number = critics_number.get().strip() if critics_number else '0'
-        critics_number = int("".join(filter(str.isdigit, critics_number)))
-        critics_link = f"https://opencritic.com{link.attrib.get('href')}" \
+        
+        item['image'] = img if img else ''
+        item['name'] = response.css('h1.mb-0::text').get().strip()
+        item['companies'] = [f[:-1].strip() if f[-1] == ',' else f for f in companies]
+        item['platforms'] = response.css('div.platforms > span > strong::text').getall()
+        item['score'] = score
+        item['rank'] = recommend
+        item['release'] = release
+        item['date'] = date
+        item['year'] = year
+        item['link'] = response.request.url
+        item['link_reviews'] = f"https://opencritic.com{link.attrib.get('href')}" \
             if link.attrib.get('href') else ''
-        yield {
-            'name': name,
-            'companies': companies,
-            'platforms': platforms,
-            'score': score,
-            'recommend': recommend,
-            'released': released,
-            'released_date': date,
-            'released_year': int(year),
-            'critics_number': critics_number,
-            'critics_link': critics_link,
-            'image': img,
-        }
+        item['reviews_number'] = int("".join(filter(str.isdigit, critics_number)))
+
+        yield item

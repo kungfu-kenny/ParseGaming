@@ -3,6 +3,7 @@ import json
 import time
 from fake_useragent import UserAgent
 from scrapy import Spider, Request
+from items import GameDirectlyMetacriticItem
 
 
 class ParseMetaCriticDirectly(Spider):
@@ -13,7 +14,7 @@ class ParseMetaCriticDirectly(Spider):
 
     def __init__(self):
         self.file = \
-            ''
+            '/home/oshevchenko/FolderProjects/ParseGaming/parsegaming/metacritic_alltime_best.json'
 
     def start_requests(self) -> list:
         """
@@ -26,11 +27,12 @@ class ParseMetaCriticDirectly(Spider):
         with open(self.file, 'r') as json_used:
             value_list = json.load(json_used)
         urls = [f.get('link', '') for f in value_list if f]
+        urls = urls[:2]
         for url in urls:
-            time.sleep(0.3)
+            # time.sleep(0.3)
             yield Request(
                 url=url,
-                headers={'User-Agent': str(UserAgent())},
+                headers={'User-Agent': str(UserAgent().random)},
                 callback=self.parse
             )
 
@@ -81,7 +83,7 @@ class ParseMetaCriticDirectly(Spider):
         li = user_counts.css('a').attrib.get('href')
         user_link = f"https://www.metacritic.com{li}" if li else ''
         user_count = 0 if not user_count or not 'Ratings' in user_count else user_count.split('Ratings')[0].strip()
-        return user_desc, user_count, user_link
+        return user_desc, int(user_count), user_link
 
     @staticmethod
     def get_developers(response:object) -> set:
@@ -99,53 +101,37 @@ class ParseMetaCriticDirectly(Spider):
         return name, link
 
     def parse(self, response:object):
-        """
-        Method which is dedicated to get values from it
-        """
-        title = response.css('a.hover_none')
-        title_href = title.attrib.get('href')
-        href = f"https://www.metacritic.com{title_href}" if title_href else ''
-        title = title.css('h1::text').get()
-        title = title.strip() if title else ''
+        item = GameDirectlyMetacriticItem()
+        
+        title_href = response.css('a.hover_none').attrib.get('href')
+        title = response.css('a.hover_none > h1::text').get()
         company = response.css('span.data')
         co = company.css('a').attrib.get('href')
-        company_href = f"https://www.metacritic.com{co}" if co else ''
         company = company.css('a::text').get()
-        company = company.strip() if company else ''
-        released = response.css('li.summary_detail.release_data')
-        released = released.css('span.data::text').get()
-        released = released.strip() if released else ''
-        score = response.css('div.metascore_w')
-        rating = response.css('li.summary_detail.product_rating')
-        rating = rating.css('span.data::text')
-        genre = response.css('li.summary_detail.product_genre')
-        platform, platform_link = self.get_platform(response)
-        reviews, reviews_link = self.get_reviews(response)
-        user_status, user_count, user_link = self.get_users(response)
-        developers_name, developers_link = self.get_developers(response)
-        yield {
-            'title': title,
-            'response': response.request.url,
-            'company': company,
-            'released': released,
-            'rating': rating.get().strip() if rating else '',
-            'platform': platform,
-            'platform_link': platform_link,
-            'reviews': int(reviews),
-            'reviews_user': int(user_count),
-            'reviews_link': reviews_link,
-            'users_link': user_link,
-            'genres': genre.css('span.data::text').getall(),
-            'score': int(score.css('span::text').get()) if score.css('span::text').get() else 0,
-            'user_score': int(float(response.css('div.metascore_w.user::text').get())*10) \
-                if response.css('div.metascore_w.user::text').get() else 0,
-            'status_press': response.css('span.desc::text').get().strip() \
-                if response.css('span.desc::text') else '',
-            'status_user': user_status,
-            'developers': developers_name,
-            'href': href,
-            'company_href': company_href,
-            'developers_link': developers_link,
-            'description': response.css('span.blurb.blurb_expanded::text').get().strip() \
-                if response.css('span.blurb.blurb_expanded::text').get() else ''
-        }
+        release = response.css('li.summary_detail.release_data > span.data::text').get()
+        
+        item['platform'], \
+            item['platform_link'] = self.get_platform(response)
+        item['reviews'], \
+            item['link_reviews'] = self.get_reviews(response)
+        item['status_user'], \
+            item['reviews_user'], \
+            item['link_users'] = self.get_users(response)
+        item['developers'], \
+            item['link_developers'] = self.get_developers(response)
+        item['name'] = title.strip() if title else ''
+        item['link'] = f"https://www.metacritic.com{title_href}" if title_href else ''
+        item['response'] = response.request.url
+        item['release'] = release.strip() if release else ''
+        item['rating'] = response.css('li.summary_detail.product_rating > span.data::text')
+        item['company'] = company.strip() if company else ''
+        item['score'] = response.css('div.metascore_w')
+        item['genre'] = response.css('li.summary_detail.product_genre > span.data::text')
+        item['link_company'] = f"https://www.metacritic.com{co}" if co else ''
+        item['score_user'] = int(float(response.css('div.metascore_w.user::text').get())*10) \
+            if response.css('div.metascore_w.user::text').get() else 0
+        item['status_press'] = response.css('span.desc::text').get().strip() \
+                if response.css('span.desc::text') else ''
+        item['description']= response.css('span.blurb.blurb_expanded::text').get().strip() \
+                if response.css('span.blurb.blurb_expanded::text') else ''
+        yield item

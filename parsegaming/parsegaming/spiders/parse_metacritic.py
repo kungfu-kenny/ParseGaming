@@ -1,6 +1,6 @@
-from platform import platform, release
 import time
 from scrapy import Spider
+from items import GameListingMetacriticItem
 
 
 class ParseMetaCritic(Spider):
@@ -53,32 +53,27 @@ class ParseMetaCritic(Spider):
         Input:  response = css value of the page
         Output: dictionary with selected values
         """
+        item = GameListingMetacriticItem()
         for block in response.css('table.clamp-list'):
             images = block.css('td.clamp-image-wrap')
             summaries = block.css('td.clamp-summary-wrap')
             for image, summary in zip(images, summaries): 
-                img = image.css('img').attrib.get('src')
-                id = summary.css('input').attrib.get('id')
-                name, link = self.parse_name(summary)
-                score_link, score = self.parse_reviews(summary)
-                release, date, year, platform = self.parse_platform(summary)
-                yield {
-                    'id': int(id) if id else -1,
-                    'name': name,
-                    'score': score,
-                    'platform': platform,
-                    'release': release,
-                    'date': date,
-                    'year': year,
-                    'link': link,
-                    'description': summary.css('div.summary::text').get().strip(),
-                    'score_link': score_link,
-                    'image': img,
-                }
-        next_span = response.css('span.flipper.next')
-        next_link = next_span.css('a.action').attrib.get('href')
+                item['description'] = summary.css('div.summary::text').get().strip()
+                item['image'] = image.css('img').attrib.get('src')
+                item['id'] = summary.css('input').attrib.get('id')
+                item['name'], \
+                    item['link'] = self.parse_name(summary)
+                item['score_link'], \
+                    item['score'] = self.parse_reviews(summary)
+                item['release'], \
+                    item['date'], \
+                    item['year'], \
+                    item['platform'] = self.parse_platform(summary)
+                yield item
+                
+        next_link = response.css('span.flipper.next > a.action').attrib.get('href')
         if next_link:
             next_link = f"https://www.metacritic.com{next_link}"
-            time.sleep(0.2)
+            # time.sleep(0.2)
             # time.sleep(5.0)
             yield response.follow(next_link, callback=self.parse)
