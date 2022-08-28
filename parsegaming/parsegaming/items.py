@@ -5,8 +5,25 @@
 import scrapy
 
 
-class GameListingOpencriticItem(scrapy.Item):
+class GameListingMetacriticItem(scrapy.Item):
+    name_item = "metacritic_listing"
     id = scrapy.Field()
+    uuid = scrapy.Field()
+    name = scrapy.Field()
+    score = scrapy.Field()
+    platform = scrapy.Field()
+    release = scrapy.Field()
+    date = scrapy.Field()
+    year = scrapy.Field()
+    link = scrapy.Field()
+    description = scrapy.Field()
+    score_link = scrapy.Field()
+    image = scrapy.Field()
+
+class GameListingOpencriticItem(scrapy.Item):
+    name_item = "opencritic_item"
+    id = scrapy.Field()
+    uuid = scrapy.Field()
     link = scrapy.Field()
     name = scrapy.Field()
     rank = scrapy.Field()
@@ -22,32 +39,20 @@ class GameListingOpencriticItem(scrapy.Item):
     
 class GameDirectlyOpencriticItem(scrapy.Item):
     id = scrapy.Field()
-    rank = scrapy.Field()
-    score = scrapy.Field()
+    link = scrapy.Field()
     name = scrapy.Field()
+    rank = scrapy.Field()
+    companies = scrapy.Field()
+    score = scrapy.Field()
     platform = scrapy.Field()
     date = scrapy.Field()
     year = scrapy.Field()
     release = scrapy.Field()
-    link = scrapy.Field()
     image = scrapy.Field()
-    companies = scrapy.Field()
     status_press = scrapy.Field()
     link_reviews = scrapy.Field()
     reviews_number = scrapy.Field()
 
-class GameListingMetacriticItem(scrapy.Item):
-    id = scrapy.Field()
-    name = scrapy.Field()
-    score = scrapy.Field()
-    platform = scrapy.Field()
-    release = scrapy.Field()
-    date = scrapy.Field()
-    year = scrapy.Field()
-    link = scrapy.Field()
-    description = scrapy.Field()
-    score_link = scrapy.Field()
-    image = scrapy.Field()
 
 class GameDirectlyMetacriticItem(scrapy.Item):
     id = scrapy.Field()

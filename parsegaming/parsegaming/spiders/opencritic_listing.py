@@ -1,6 +1,6 @@
 import time
 from scrapy import Spider
-from items import GameListingOpencriticItem
+from parsegaming.items import GameListingOpencriticItem
 
 
 class ParseOpenCritic(Spider):

@@ -3,7 +3,7 @@ import json
 import time
 from fake_useragent import UserAgent
 from scrapy import Spider, Request
-from items import GameDirectlyMetacriticItem
+from parsegaming.items import GameDirectlyMetacriticItem
 
 
 class ParseMetaCriticDirectly(Spider):

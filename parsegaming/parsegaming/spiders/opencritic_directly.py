@@ -2,7 +2,7 @@ import os
 import json
 import time
 from scrapy import Request, Spider
-from items import GameDirectlyOpencriticItem
+from parsegaming.items import GameDirectlyOpencriticItem
 
 
 class ParseOpenCriticDirectly(Spider):
