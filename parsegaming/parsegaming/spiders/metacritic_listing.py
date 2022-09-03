@@ -3,7 +3,7 @@ from parsegaming.items import GameListingMetacriticItem
 
 
 class ParseMetaCritic(Spider):
-    name = 'metacritic'
+    name = 'metacritic_listing'
     start_urls = [
         'https://www.metacritic.com/browse/games/score/metascore/all/all/filtered'
     ]

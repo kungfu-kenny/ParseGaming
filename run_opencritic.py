@@ -4,9 +4,9 @@ from scrapy.crawler import CrawlerRunner
 
 @defer.inlineCallbacks
 def run_scraping(runner: CrawlerRunner):
-    yield runner.crawl('metacritic_listing')
+    yield runner.crawl('opencritic_listing')
 
-    yield runner.crawl('metacritic_source_data')
+    yield runner.crawl('opencritic_source_data')
     reactor.stop()
 
 def main():

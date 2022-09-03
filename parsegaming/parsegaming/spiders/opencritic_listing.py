@@ -4,7 +4,7 @@ from parsegaming.items import GameListingOpencriticItem
 
 
 class ParseOpenCritic(Spider):
-    name = 'opencritic'
+    name = 'opencritic_listing'
     start_urls = [
         'https://opencritic.com/browse/all'
     ]

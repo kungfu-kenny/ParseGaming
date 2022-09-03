@@ -10,7 +10,7 @@ class ParseMetaCriticDirectly(Spider):
     """
     Class which is dedicated to parse in metacritic directly
     """
-    name = 'metacritic_games'
+    name = 'metacritic_source_data'
 
     def __init__(self):
         self.file = \

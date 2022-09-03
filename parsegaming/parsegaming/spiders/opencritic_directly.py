@@ -9,7 +9,7 @@ class ParseOpenCriticDirectly(Spider):
     """
     parse all selected values from the videogames
     """
-    name = 'opencritic_games'
+    name = 'opencritic_source_data'
 
     def __init__(self) -> None:
         self.file = \
